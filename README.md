@@ -21,7 +21,8 @@ Where Art Thou? is:
 Curious to find out how this was made possible? Check 'Hacking this page' below!
 
 
-Copyright (c) 2014 Regal Disclaimer
+Copyright (c) Regal Disclaimer 2014 All Rights Reserved.
+Contact: regaldisclaimer@gmail.com for all usage permissions
 
 
 #Hacking this page
