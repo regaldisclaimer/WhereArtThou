@@ -1,0 +1,38 @@
+{
+    "rules": {
+      ".read": "(auth!=null)",
+      ".write": "(auth!=null)",
+      "location": {
+        ".validate": "(auth.uid=='facebook:10204862364421183')"
+      },
+      "milTime": {
+        ".validate": "(auth.uid=='facebook:10204862364421183')"
+      },
+      "messages":{
+        "$message_id":{
+          ".validate": "(!data.exists() && newData.exists())&&(newData.hasChildren(['text', 'name', 'uid', 'timestamp']))",
+          "text":{
+            ".validate": "((newData.isString())&&(newData.val().length<500)&&(newData.val().length>0))"
+          },
+          "name":{
+            ".validate": "(newData.isString())"
+          },
+          "uid":{
+            ".validate": "(newData.val()==auth.uid)"
+          },
+          "timestamp":{
+            ".validate": "((newData.val()>=now-500)&&(((newData.val())-(data.parent().parent().parent().child('userTimes/'+auth.uid).val()))<=10))"
+          },
+          "$other": { ".validate": false }
+        }
+      },
+      "userTimes": {
+        "$user" :{
+          ".validate": "((newData.exists())&&(auth.uid===$user)&&(newData.isNumber())&&(newData.val()==now)&&((!data.exists() || newData.val() > data.val()+5000)))"
+        }
+      },
+      "authLog": {
+      },
+      "$other": { ".validate": false }
+    }
+}

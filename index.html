@@ -1,0 +1,249 @@
+<!doctype HTML>
+<meta charset='UTF-8'>
+
+<!--Copyright (c) 2014 Regal Disclaimer-->
+
+
+<html>
+
+<head>
+  <Title>Where Art Thou?</Title>
+  <link rel="stylesheet" type="text/css" href='index.css'>
+  <script src="https://cdn.firebase.com/js/client/1.0.21/firebase.js"></script>
+  <script src="https://cdn.firebase.com/js/simple-login/1.6.3/firebase-simple-login.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <link href='http://fonts.googleapis.com/css?family=Roboto:300,400,700' rel='stylesheet' type='text/css'>
+  
+  <link rel="apple-touch-icon" href="http://i.imgur.com/PaIzLlI.png">
+  <link rel="apple-touch-icon-precomposed" href="http://i.imgur.com/PaIzLlI.png">
+  <link rel="icon" type="image/png" href="http://i.imgur.com/PaIzLlI.png">
+  
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="shortcut icon" sizes="128x128" href="http://i.imgur.com/wB9eW8I.png">
+  <link rel="shortcut icon" sizes="196x196" href="http://i.imgur.com/L6YpPVk.png">
+  <link rel="shortcut icon" sizes="256x256" href="http://i.imgur.com/PaIzLlI.png">
+
+  
+</head>
+
+<body>
+  <div class='loggedOut'>
+    <div class='waldo'>
+      <p><h1>Where Art Thou?</h1></p>
+    </div>
+    <div class='waldo'>
+      <p>
+        Find out when I'll be back, or Let me know you stopped by!
+      </p>
+    </div>
+    
+    <button type='button' onclick='fbookAuth()' class='fbButton'></button>
+    <p class='authStatus'>Not Logged in</p>
+    <p>No personal data is stored. This login is solely for the purpose of spam prevention</p>
+    <div class='waldo'>
+    </div>
+    <div class='waldo'>
+    </div>
+    <div class='waldo'>
+      <a href=https://github.com/regaldisclaimer/WhereIsWaldo/blob/gh-pages/README.md#hacking-this-page>Source & Description to help you hack/break this page!</a>
+    </div>
+  </div>
+  
+  <div class='loggedIn'>
+    
+    <div class='whereIs'>
+      <p>I will be <span class='location'></span> until <span class='milTime'></span>  </p>
+      </ br>
+      <p>Please leave a message below in the meanwhile</p>
+      
+      <p class='warning'>NB: To Prevent Spam, only one post is allowed every 5 seconds. Character limit: 500</p>
+      
+      
+    </div>
+    
+    
+    <!--chat-->
+    <div class="example-chat l-demo-container">
+      <header>White Board</header>
+      
+      <div class='example-chat-toolbar'>
+      </div>
+      
+      <ul id='example-messages' class="example-chat-messages"></ul>
+      
+      <footer>
+        <input type='text' id='messageInput'  placeholder='Type a message...'>
+      </footer>
+    </div> 
+    
+    <div class='moreDiv'>
+      <a href=# onclick='toggleShow()'>More...</a>
+    </div>
+    <div class='toggle' hidden>
+      <button type='button' class='fblogOut myButton' onclick='fbookLogout()'>Log Out of Where Art Thou</button>
+      
+      <div class='regInput'>
+        <input type='text' id='locationInput' placeholder='location'>
+        <input type='text' id='timeInput' placeholder='time'>
+        <button type='button' class='submit myButton' onclick='submitUpdate()'>Submit</button>
+      </div>
+    </div>
+    
+    
+    
+  </div>
+  
+</body>
+
+<script>
+var userRef;
+var stampRef;
+var nameRef;
+var userID;
+  //firebase simple login
+  var myRef = new Firebase("https://WhereIsWaldo.firebaseio.com");
+  var locationRef = myRef.child('location');
+  var timeRef = myRef.child('milTime');
+  var authClient = new FirebaseSimpleLogin(myRef, function(error, user) {
+    if (error) {
+      // an error occurred while attempting login
+      console.log(error);
+    } else if (user) {
+      // user authenticated with Firebase
+      userRef = user;
+      userID = user.uid;
+      stampRef = new Firebase('https://WhereIsWaldo.firebaseIO.com/userTimes/'+userID);
+      nameRef = new Firebase('https://WhereIsWaldo.firebaseIO.com/userNames/'+userID);
+      nameRef.set(user.displayName);
+      console.log("User ID: " + user.uid + ", Provider: " + user.provider);
+      logAuth();
+      
+      updateLocTime();
+      updateChat();
+      
+    } else {
+      // user is logged out
+    }
+  });
+  
+  //auth status monitoring
+  var authRef = new Firebase("https://WhereIsWaldo.firebaseio.com/.info/authenticated");
+  authRef.on("value", function(snap) {
+    if (snap.val() === true) {
+      $('.authStatus').text('Logged In');
+      $('.loggedOut').hide();
+      $('.loggedIn').show();
+      $('.regInput').show(); 
+
+    } else {
+      $('.authStatus').text('Please Log In');
+      $('.loggedIn').hide();
+      $('.loggedOut').show();
+      $('.regInput').hide();
+    }
+  });
+
+
+
+
+  //manually update location/time
+  function updateLocTime() {
+
+    $(document).ready(function(){
+    // Attach an asynchronous callback to read the data at our posts reference
+    locationRef.on('value', function (snapshot) {
+      $('.location').text(snapshot.val());
+    }, function (errorObject) {
+      console.log('The read failed: ' + errorObject.code);
+    });
+    
+    timeRef.on('value', function (snapshot) {
+      $('.milTime').text(snapshot.val());
+    }, function (errorObject) {
+      console.log('The read failed: ' + errorObject.code);
+    });
+  });
+
+  }
+
+  function fbookAuth() {
+    authClient.login('facebook');
+  }
+  
+  function fbookLogout() {
+    //if I set refs as null, the refs need to be reset during auth, or the page needs to be refreshed before auth. ew.
+    authClient.logout();  
+  }
+  
+  logRef = myRef.child('authLog');
+  var timeStamp = new Date();
+  var stringTimeStamp = timeStamp.toDateString();
+  function logAuth() {
+    if (userRef.uid!="facebook:10204862364421183")
+      logRef.push({uid:userRef.uid, name:userRef.displayName, time:stringTimeStamp});
+  }
+  //chat
+  
+  // CREATE A REFERENCE TO FIREBASE
+  var messagesRef = new Firebase('https://WhereIsWaldo.firebaseIO.com/messages');
+  
+  // REGISTER DOM ELEMENTS
+  var messageField = $('#messageInput');
+  var nameField = $('#nameInput');
+  var messageList = $('#example-messages');
+
+  // LISTEN FOR KEYPRESS EVENT
+  messageField.keypress(function (e) {
+    if (e.keyCode == 13) {
+      //FIELD VALUES
+      var username = userRef.displayName;
+      var message = messageField.val();
+
+      //SAVE DATA TO FIREBASE AND EMPTY FIELD
+      stampRef.set(Firebase.ServerValue.TIMESTAMP);
+      messagesRef.push({name:username, text:message, uid:userRef.uid, timestamp:Firebase.ServerValue.TIMESTAMP});
+      messageField.val('');
+    }
+  });
+
+  //manually update chat
+  
+  function updateChat(){
+  // Add a callback that is triggered for each chat message.
+  messagesRef.limit(200).on('child_added', function (snapshot) {
+    //GET DATA
+    var data = snapshot.val();
+    var username = data.name || "anonymous";
+    var message = data.text;
+
+    //CREATE ELEMENTS MESSAGE & SANITIZE TEXT
+    var messageElement = $("<li>");
+    var nameElement = $("<strong class='example-chat-username'></strong>")
+    nameElement.text(username);
+    messageElement.text(message).prepend(nameElement);
+
+    //ADD MESSAGE
+    messageList.append(messageElement)
+
+    //SCROLL TO BOTTOM OF MESSAGE LIST
+    messageList[0].scrollTop = messageList[0].scrollHeight;
+  });
+}
+
+function submitUpdate() {
+  
+    var locationField = $('#locationInput');
+    var timeField = $('#timeInput');
+    locationRef.set(locationField.val());
+    timeRef.set(timeField.val());
+  
+}
+
+function toggleShow() {
+  $('.toggle').toggle();
+}
+
+</script>
+
+</html>
+
